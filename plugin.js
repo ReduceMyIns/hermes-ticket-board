@@ -1,15 +1,16 @@
 /**
- * AgencyOS Ticket Board — Hermes desktop plugin.
+ * AgencyOS Ticket Board - Hermes desktop plugin.
  * Sidebar "Tickets" nav row + full board page, backed by the gateway-side
  * Python plugin backend (Firestore via /api/plugins/ticket-board/*).
  *
  * INSTALL: save as
  *   <hermes home>/desktop-plugins/ticket-board/plugin.js
  * (folder name MUST equal the plugin id "ticket-board"), then
- * Ctrl+K → "Reload desktop plugins".
+ * Ctrl+K -> "Reload desktop plugins".
  *
- * Plain ESM, uncompiled — jsx() calls, not JSX syntax.
+ * Plain ESM, uncompiled - jsx() calls, not JSX syntax.
  * Only @hermes/plugin-sdk, react, and react/jsx-runtime import.
+ * Pure ASCII - no smart quotes, em-dashes, or emoji (avoids encoding issues).
  */
 import { host, Button, EmptyState, ScrollArea, ROUTES_AREA, SIDEBAR_NAV_AREA, PALETTE_AREA } from '@hermes/plugin-sdk'
 import { useState, useEffect, useCallback } from 'react'
@@ -54,7 +55,7 @@ function TicketRow({ t, onOpen }) {
       jsxs('div', { className: 'flex items-center gap-2 mt-1 text-[10px] text-(--ui-text-tertiary)', children: [
         jsx('span', { children: t.channel }),
         t.policyNumber && jsx('span', { className: 'font-mono', children: t.policyNumber }),
-        drafts > 0 && jsx('span', { className: 'text-blue-400', children: `✉ ${drafts} draft${drafts > 1 ? 's' : ''}` }),
+        drafts > 0 && jsx('span', { className: 'text-blue-400', children: `* ${drafts} draft${drafts > 1 ? 's' : ''}` }),
         t.updatedAt && jsx('span', { className: 'ml-auto', children: new Date(t.updatedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) }),
       ]}),
     ]
@@ -81,7 +82,7 @@ function BoardPage({ filter, setFilter, onOpen }) {
   }, [load])
 
   if (error) return jsx('div', { className: 'p-4 text-sm text-red-400', children: `Error: ${error}` })
-  if (!data) return jsx('div', { className: 'p-4 text-sm text-(--ui-text-secondary)', children: 'Loading tickets…' })
+  if (!data) return jsx('div', { className: 'p-4 text-sm text-(--ui-text-secondary)', children: 'Loading tickets...' })
 
   const tickets = data.tickets || []
   return jsxs('div', { className: 'flex h-full flex-col', children: [
@@ -91,11 +92,11 @@ function BoardPage({ filter, setFilter, onOpen }) {
           key: f,
           onClick: () => setFilter(f),
           className: `px-2 py-1 rounded-md text-xs font-medium transition-colors ${filter === f ? 'bg-(--ui-accent) text-white' : 'text-(--ui-text-secondary) hover:bg-(--chrome-action-hover)'}`,
-          children: f === 'ALL' ? 'All' : (STATUS_STYLE[f]?.label || f.replace(/_/g, ' ')),
+          children: f === 'ALL' ? 'All' : ((STATUS_STYLE[f] && STATUS_STYLE[f].label) || f.replace(/_/g, ' ')),
         })
       ),
     ]}),
-    jsx('div', { className: 'px-3 py-1.5 border-b border-(--ui-stroke-secondary) text-xs text-(--ui-text-tertiary)', children: `${tickets.length} tickets${filter === 'NEEDS_HUMAN' ? ' — needs your input' : ''}` }),
+    jsx('div', { className: 'px-3 py-1.5 border-b border-(--ui-stroke-secondary) text-xs text-(--ui-text-tertiary)', children: `${tickets.length} tickets${filter === 'NEEDS_HUMAN' ? ' - needs your input' : ''}` }),
     tickets.length === 0
       ? jsx('div', { className: 'p-8', children: jsx(EmptyState, { title: 'No tickets', description: 'Nothing in this view right now.' }) })
       : jsxs(ScrollArea, { className: 'flex-1 px-2 py-2', children: tickets.map(t => jsx(TicketRow, { key: t.id, t, onOpen })) }),
@@ -116,7 +117,7 @@ function DetailView({ t, onBack }) {
   const addEvent = (text, type = 'note') => {
     rest(`/tickets/${t.id}/events`, { method: 'POST', body: JSON.stringify({ text, type, visibleToClient: false }) }).catch(() => {})
   }
-  const changeStatus = (s) => { patch({ status: s }); addEvent(`Status → ${s}`, 'status') }
+  const changeStatus = (s) => { patch({ status: s }); addEvent(`Status -> ${s}`, 'status') }
   const changePriority = (p) => patch({ priority: p })
   const markDraftQueued = (ch) => {
     const drafts = { ...(d.drafts || {}) }
@@ -132,14 +133,14 @@ function DetailView({ t, onBack }) {
 
   return jsxs('div', { className: 'flex h-full flex-col', children: [
     jsxs('div', { className: 'px-4 py-3 border-b border-(--ui-stroke-secondary)', children: [
-      jsx('button', { onClick: onBack, className: 'text-xs text-(--ui-text-secondary) hover:text-(--ui-foreground) mb-2', children: '← Back' }),
+      jsx('button', { onClick: onBack, className: 'text-xs text-(--ui-text-secondary) hover:text-(--ui-foreground) mb-2', children: '<- Back' }),
       jsxs('div', { className: 'flex items-center gap-2', children: [
         d.priority && jsx('span', { className: `text-[10px] font-bold px-1.5 py-0.5 rounded ${PRIO_STYLE[d.priority]}`, children: d.priority }),
         jsx('h2', { className: 'text-base font-semibold text-(--ui-foreground) flex-1', children: d.clientName || d.subject }),
         jsx('span', { className: `text-[10px] font-semibold px-1.5 py-0.5 rounded ${st.cls}`, children: st.label }),
       ]}),
       jsx('div', { className: 'text-xs text-(--ui-text-secondary) mt-0.5', children: d.subject }),
-      d.policyNumber && jsx('div', { className: 'text-[11px] font-mono text-(--ui-text-tertiary) mt-1', children: `Policy ${d.policyNumber}${d.carrier ? ` · ${d.carrier}` : ''}` }),
+      d.policyNumber && jsx('div', { className: 'text-[11px] font-mono text-(--ui-text-tertiary) mt-1', children: `Policy ${d.policyNumber}${d.carrier ? ` - ${d.carrier}` : ''}` }),
     ]}),
 
     jsxs(ScrollArea, { className: 'flex-1 px-4 py-3 space-y-4', children: [
@@ -148,7 +149,7 @@ function DetailView({ t, onBack }) {
         ['NEW', 'IN_PROGRESS', 'WAITING_ON_CARRIER', 'WAITING_ON_CLIENT', 'BLOCKED', 'CLOSED'].map(s =>
           jsx('button', { key: s, onClick: () => changeStatus(s), disabled: busy,
             className: `px-2 py-1 rounded-md text-[10px] font-semibold ${d.status === s ? 'bg-(--ui-accent) text-white' : 'bg-(--chrome-action-hover) text-(--ui-text-secondary)'}`,
-            children: STATUS_STYLE[s]?.label || s })),
+            children: (STATUS_STYLE[s] && STATUS_STYLE[s].label) || s })),
       ]}),
       jsxs('div', { className: 'flex flex-wrap items-center gap-1.5', children: [
         jsx('span', { className: 'text-[10px] font-bold uppercase text-(--ui-text-tertiary) mr-1', children: 'Priority' }),
@@ -166,7 +167,7 @@ function DetailView({ t, onBack }) {
               jsx('span', { className: 'font-semibold', children: m.senderName || m.channel }),
               m.timestamp && jsx('span', { children: new Date(m.timestamp).toLocaleString() }),
             ]}),
-            jsx('div', { className: 'whitespace-pre-wrap text-(--ui-foreground)', children: m.content?.slice(0, 800) }),
+            jsx('div', { className: 'whitespace-pre-wrap text-(--ui-foreground)', children: (m.content && m.content.slice(0, 800)) }),
           ]})),
       ]}),
 
@@ -174,10 +175,10 @@ function DetailView({ t, onBack }) {
         jsx('h3', { className: 'text-[11px] font-bold uppercase text-(--ui-text-tertiary) mb-1.5', children: 'Plan & Tasks' }),
         planSteps.length === 0 ? jsx('div', { className: 'text-xs text-(--ui-text-tertiary) italic', children: 'No plan yet.' })
           : planSteps.map((s, i) => jsxs('div', { key: i, className: 'flex items-start gap-2 rounded-lg border border-(--ui-stroke-secondary) px-3 py-2 mb-1.5 text-xs', children: [
-            jsx('span', { className: `mt-0.5 ${s.assigneeType === 'AI' ? 'text-blue-400' : 'text-amber-400'}`, children: s.assigneeType === 'AI' ? '⚡' : '👤' }),
+            jsx('span', { className: `mt-0.5 ${s.assigneeType === 'AI' ? 'text-blue-400' : 'text-amber-400'}`, children: s.assigneeType === 'AI' ? 'AI' : 'HU' }),
             jsxs('div', { className: 'flex-1', children: [
               jsx('div', { className: 'text-(--ui-foreground) font-medium', children: s.title }),
-              s.scheduledStart && jsx('div', { className: 'text-[10px] text-(--ui-text-tertiary)', children: `📅 ${new Date(s.scheduledStart).toLocaleString()}` }),
+              s.scheduledStart && jsx('div', { className: 'text-[10px] text-(--ui-text-tertiary)', children: `@ ${new Date(s.scheduledStart).toLocaleString()}` }),
             ]}),
             s.estimatedMinutes && jsx('span', { className: 'text-[10px] text-(--ui-text-tertiary)', children: `${s.estimatedMinutes}m` }),
           ]})),
@@ -190,21 +191,21 @@ function DetailView({ t, onBack }) {
             jsxs('div', { key: ch, className: 'rounded-lg border border-blue-500/20 bg-blue-500/5 px-3 py-2 mb-1.5 text-xs', children: [
               jsxs('div', { className: 'flex justify-between items-center mb-1', children: [
                 jsx('span', { className: 'text-[10px] font-bold text-blue-300', children: ch }),
-                jsx(Button, { size: 'sm', variant: 'primary', onClick: () => markDraftQueued(ch), children: 'Approve → queue' }),
+                jsx(Button, { size: 'sm', variant: 'primary', onClick: () => markDraftQueued(ch), children: 'Approve -> queue' }),
               ]}),
               jsx('div', { className: 'whitespace-pre-wrap text-(--ui-foreground) max-h-32 overflow-y-auto', children: text }),
             ])),
       ]}),
 
-      (d.actionItems?.length || d.aiTasks?.length) && jsxs('div', { children: [
+      ((d.actionItems && d.actionItems.length) || (d.aiTasks && d.aiTasks.length)) && jsxs('div', { children: [
         jsx('h3', { className: 'text-[11px] font-bold uppercase text-(--ui-text-tertiary) mb-1.5', children: 'What needs doing' }),
-        (d.actionItems || []).map((a, i) => jsx('div', { key: `a${i}`, className: 'flex items-start gap-2 text-xs text-amber-200 mb-1', children: ['🔴', jsx('span', { children: a })] })),
-        (d.aiTasks || []).map((a, i) => jsx('div', { key: `i${i}`, className: 'flex items-start gap-2 text-xs text-blue-200 mb-1', children: ['⚡', jsx('span', { children: a })] })),
+        (d.actionItems || []).map((a, i) => jsx('div', { key: `a${i}`, className: 'flex items-start gap-2 text-xs text-amber-200 mb-1', children: ['H', jsx('span', { children: a })] })),
+        (d.aiTasks || []).map((a, i) => jsx('div', { key: `i${i}`, className: 'flex items-start gap-2 text-xs text-blue-200 mb-1', children: ['A', jsx('span', { children: a })] })),
       ]}),
 
       notes.length > 0 && jsxs('div', { children: [
         jsx('h3', { className: 'text-[11px] font-bold uppercase text-(--ui-text-tertiary) mb-1.5', children: 'Notes' }),
-        notes.map((n, i) => jsx('div', { key: i, className: 'text-xs text-(--ui-text-secondary) mb-1', children: `• ${n.text}` })),
+        notes.map((n, i) => jsx('div', { key: i, className: 'text-xs text-(--ui-text-secondary) mb-1', children: `- ${n.text}` })),
       ]}),
 
       msg && jsx('div', { className: 'text-xs text-red-400', children: msg }),
