@@ -3,13 +3,16 @@
  * Sidebar "Tickets" nav row + full board page, backed by the gateway-side
  * Python plugin backend (Firestore via /api/plugins/ticket-board/*).
  *
- * Plain ESM, uncompiled — jsx() calls, not JSX.
- * NOTE: this desktop half loads on the machine running the desktop app.
+ * INSTALL: save as
+ *   <hermes home>/desktop-plugins/ticket-board/plugin.js
+ * (folder name MUST equal the plugin id "ticket-board"), then
+ * Ctrl+K → "Reload desktop plugins".
+ *
+ * Plain ESM, uncompiled — jsx() calls, not JSX syntax.
+ * Only @hermes/plugin-sdk, react, and react/jsx-runtime import.
  */
-import {
-  host, useValue, Button, EmptyState, ScrollArea,
-  ROUTES_AREA, SIDEBAR_NAV_AREA, PALETTE_AREA,
-} from '@hermes/plugin-sdk'
+import { host, Button, EmptyState, ScrollArea, ROUTES_AREA, SIDEBAR_NAV_AREA, PALETTE_AREA } from '@hermes/plugin-sdk'
+import { useState, useEffect, useCallback } from 'react'
 import { jsx, jsxs } from 'react/jsx-runtime'
 
 const ID = 'ticket-board'
@@ -59,10 +62,10 @@ function TicketRow({ t, onOpen }) {
 }
 
 function BoardPage({ filter, setFilter, onOpen }) {
-  const [data, setData] = React.useState(null)
-  const [error, setError] = React.useState(null)
+  const [data, setData] = useState(null)
+  const [error, setError] = useState(null)
 
-  const load = React.useCallback(() => {
+  const load = useCallback(() => {
     const q = new URLSearchParams()
     if (filter === 'NEEDS_HUMAN') q.set('needs_human', 'true')
     else if (filter && filter !== 'ALL') q.set('status', filter)
@@ -71,8 +74,8 @@ function BoardPage({ filter, setFilter, onOpen }) {
       .catch(e => setError(String(e)))
   }, [filter])
 
-  React.useEffect(() => { load() }, [load])
-  React.useEffect(() => {
+  useEffect(() => { load() }, [load])
+  useEffect(() => {
     const id = setInterval(load, 20000)
     return () => clearInterval(id)
   }, [load])
@@ -100,9 +103,9 @@ function BoardPage({ filter, setFilter, onOpen }) {
 }
 
 function DetailView({ t, onBack }) {
-  const [d, setD] = React.useState(t)
-  const [busy, setBusy] = React.useState(false)
-  const [msg, setMsg] = React.useState('')
+  const [d, setD] = useState(t)
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState('')
 
   const patch = (body) => {
     setBusy(true)
@@ -210,8 +213,8 @@ function DetailView({ t, onBack }) {
 }
 
 function TicketApp() {
-  const [filter, setFilter] = React.useState('NEEDS_HUMAN')
-  const [open, setOpen] = React.useState(null)
+  const [filter, setFilter] = useState('NEEDS_HUMAN')
+  const [open, setOpen] = useState(null)
   if (open) return jsx(DetailView, { t: open, onBack: () => setOpen(null) })
   return jsx(BoardPage, { filter, setFilter, onOpen: setOpen })
 }
